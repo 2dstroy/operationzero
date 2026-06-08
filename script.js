@@ -1,363 +1,80 @@
-class OperationZeroGame {
-    constructor() {
-        this.gridSize = 10;
-        this.score = 0;
-        this.level = 1;
-        this.lives = 3;
-        this.gameRunning = false;
-        this.gamePaused = false;
-        this.playerPosition = null;
-        this.enemies = [];
-        this.powerups = [];
-        this.gameSpeed = 1000;
-        this.difficulty = 1;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const miniCanvas = document.getElementById('minimap');
+const mctx = miniCanvas.getContext('2d');
 
-        this.initializeElements();
-        this.createGrid();
-        this.attachEventListeners();
-    }
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-    initializeElements() {
-        this.gameBoard = document.getElementById('gameBoard');
-        this.scoreDisplay = document.getElementById('score');
-        this.levelDisplay = document.getElementById('level');
-        this.livesDisplay = document.getElementById('lives');
-        this.gameStatusDisplay = document.getElementById('gameStatus');
-        this.startBtn = document.getElementById('startBtn');
-        this.pauseBtn = document.getElementById('pauseBtn');
-        this.resetBtn = document.getElementById('resetBtn');
-    }
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+const TILE = 40;
+const MAP_W = 30, MAP_H = 22;
+const PLAYER_R = 10;
+const BULLET_SPEED = 14;
+const ENEMY_SPEED = 1.2;
+const ROUND_TIME = 115;
+const BUY_TIME = 20;
+const BOMB_TIME = 40;
+const DEFUSE_TIME = 5;
+const PLANT_TIME = 3;
 
-    createGrid() {
-        this.gameBoard.innerHTML = '';
-        this.grid = {};
+// Weapons
+const WEAPONS = {
+  glock:  {name:'GLOCK-17', dmg:22, rof:180, reload:1.5, mag:15, reserve:45, spread:0.08, auto:false, cost:200, type:'Pistol'},
+  usp:    {name:'USP-S',    dmg:25, rof:250, reload:2.0, mag:12, reserve:36, spread:0.05, auto:false, cost:300, type:'Pistol'},
+  deagle: {name:'DEAGLE',  dmg:98, rof:700, reload:2.2, mag:7,  reserve:35, spread:0.06, auto:false, cost:700, type:'Pistol'},
+  mp5:    {name:'MP5-SD',  dmg:28, rof:120, reload:2.0, mag:30, reserve:120,spread:0.06, auto:true,  cost:1500,type:'SMG'},
+  ak47:   {name:'AK-47',   dmg:86, rof:600, reload:2.5, mag:30, reserve:90, spread:0.10, auto:true,  cost:2700,type:'Rifle'},
+  m4a1:   {name:'M4A1-S',  dmg:74, rof:500, reload:3.1, mag:20, reserve:80, spread:0.05, auto:true,  cost:2900,type:'Rifle'},
+  awp:    {name:'AWP',     dmg:999,rof:1300,reload:3.7, mag:5,  reserve:30, spread:0.01, auto:false, cost:4750,type:'Sniper'},
+  helmet: {name:'HELMET',  cost:350, type:'Equipment'},
+  armor:  {name:'ARMOR',   cost:650, type:'Equipment'},
+  he:     {name:'HE GREN', cost:300, type:'Grenade'},
+};
 
-        for (let i = 0; i < this.gridSize * this.gridSize; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.id = `cell-${i}`;
-            cell.addEventListener('click', () => this.handleCellClick(i));
-            this.gameBoard.appendChild(cell);
-            this.grid[i] = { element: cell, type: 'empty' };
-        }
+// Map layout
+const RAW_MAP = [ /* ... same as before ... */ ];
+const MAP_DATA = RAW_MAP.map(row => row.split('').map(Number));
 
-        // Place player
-        this.playerPosition = Math.floor(Math.random() * (this.gridSize * this.gridSize));
-        this.updateCell(this.playerPosition, 'player', '🎮');
+// ── STATE ──────────────────────────────────────────────────────────────────
+let gameState = 'menu';
+let camera = {x:0, y:0};
 
-        // Place initial enemies
-        this.spawnEnemies();
-        
-        // Place initial powerups
-        this.spawnPowerups();
-    }
+const player = {
+  x:0, y:0, angle:0,
+  hp:100, armor:0, hasHelmet:false,
+  money:800,
+  weapons:[{...WEAPONS.usp, ammo:12, reserve:36, key:'usp'}],
+  activeWeapon:0,
+  hasBomb:false,
+  lastShot:0, reloading:false, reloadEnd:0,
+  alive:true, isT:false,
+  name:'GHOST_7'
+};
 
-    spawnEnemies() {
-        this.enemies = [];
-        const enemyCount = 2 + this.level;
-        
-        for (let i = 0; i < enemyCount; i++) {
-            let pos;
-            do {
-                pos = Math.floor(Math.random() * (this.gridSize * this.gridSize));
-            } while (pos === this.playerPosition || this.enemies.includes(pos));
-            
-            this.enemies.push(pos);
-            this.updateCell(pos, 'enemy', '👾');
-        }
-    }
+let enemies = [];
+let bullets = [];
+let effects = [];
+let killfeed = [];
+let bomb = {planted:false, x:0, y:0, timer:0, defusing:false, defuseProgress:0, planting:false, plantProgress:0, siteLabel:'A'};
+let round = {num:1, ctScore:0, tScore:0, timer:ROUND_TIME, phase:'buy', phaseTimer:BUY_TIME, ctWon:false};
+let roundEndTimer = 0;
+let nextRoundTimer = 0;
+let isBuyOpen = false;
+let keys = {};
+let mouseX = 0, mouseY = 0;
+let mouseDown = false;
+let bombsite = {x:0, y:0};
 
-    spawnPowerups() {
-        this.powerups = [];
-        const powerupCount = 1 + Math.floor(this.level / 2);
-        
-        for (let i = 0; i < powerupCount; i++) {
-            let pos;
-            do {
-                pos = Math.floor(Math.random() * (this.gridSize * this.gridSize));
-            } while (
-                pos === this.playerPosition ||
-                this.enemies.includes(pos) ||
-                this.powerups.includes(pos)
-            );
-            
-            this.powerups.push(pos);
-            this.updateCell(pos, 'powerup', '⭐');
-        }
-    }
+// Find spawn points and bombsites
+let ctSpawns = [], tSpawns = [], bombsites = [];
+MAP_DATA.forEach((row,r)=>row.forEach((cell,c)=>{
+  if(cell===3) ctSpawns.push({x:c*TILE+TILE/2, y:r*TILE+TILE/2});
+  if(cell===4) tSpawns.push({x:c*TILE+TILE/2, y:r*TILE+TILE/2});
+  if(cell===2) bombsites.push({x:c*TILE+TILE/2, y:r*TILE+TILE/2});
+}));
+if(bombsites.length>0) bombsite = bombsites[Math.floor(bombsites.length/2)];
 
-    updateCell(position, type, symbol) {
-        if (!this.grid[position]) return;
+// ... Rest of your JavaScript code (all functions: spawnEnemy, initRound, isWall, etc.) ...
 
-        const cell = this.grid[position].element;
-        cell.className = 'cell';
-        cell.textContent = '';
-
-        if (type === 'empty') {
-            this.grid[position].type = 'empty';
-        } else {
-            cell.classList.add(type);
-            cell.textContent = symbol;
-            this.grid[position].type = type;
-        }
-    }
-
-    clearCell(position) {
-        this.updateCell(position, 'empty', '');
-    }
-
-    handleCellClick(position) {
-        if (!this.gameRunning || this.gamePaused) return;
-
-        // Simple movement logic - move to adjacent cells
-        const distance = this.getDistance(this.playerPosition, position);
-        
-        if (distance === 1) {
-            this.movePlayer(position);
-        }
-    }
-
-    getDistance(pos1, pos2) {
-        const row1 = Math.floor(pos1 / this.gridSize);
-        const col1 = pos1 % this.gridSize;
-        const row2 = Math.floor(pos2 / this.gridSize);
-        const col2 = pos2 % this.gridSize;
-
-        return Math.max(Math.abs(row1 - row2), Math.abs(col1 - col2));
-    }
-
-    movePlayer(newPosition) {
-        this.clearCell(this.playerPosition);
-        this.playerPosition = newPosition;
-        this.updateCell(this.playerPosition, 'player', '🎮');
-
-        // Check collisions
-        if (this.enemies.includes(newPosition)) {
-            this.handleEnemyCollision();
-        }
-
-        if (this.powerups.includes(newPosition)) {
-            this.handlePowerupCollision(newPosition);
-        }
-
-        // Check win condition
-        if (this.enemies.length === 0) {
-            this.levelUp();
-        }
-    }
-
-    handleEnemyCollision() {
-        this.lives--;
-        this.livesDisplay.textContent = this.lives;
-
-        if (this.lives <= 0) {
-            this.gameOver();
-        } else {
-            this.gameStatusDisplay.textContent = 'Hit! Be careful...';
-            setTimeout(() => {
-                this.resetPlayerPosition();
-            }, 500);
-        }
-    }
-
-    handlePowerupCollision(position) {
-        this.powerups = this.powerups.filter(p => p !== position);
-        this.clearCell(position);
-        this.score += 50 * this.level;
-        this.scoreDisplay.textContent = this.score;
-        this.gameStatusDisplay.textContent = 'Power-up collected! +50 points';
-        
-        // Remove a random enemy
-        if (this.enemies.length > 0) {
-            const enemyIndex = Math.floor(Math.random() * this.enemies.length);
-            const enemyPos = this.enemies[enemyIndex];
-            this.clearCell(enemyPos);
-            this.enemies.splice(enemyIndex, 1);
-            this.score += 100 * this.level;
-            this.scoreDisplay.textContent = this.score;
-            this.gameStatusDisplay.textContent = 'Enemy defeated! +100 points';
-        }
-    }
-
-    resetPlayerPosition() {
-        this.clearCell(this.playerPosition);
-        this.playerPosition = Math.floor(Math.random() * (this.gridSize * this.gridSize));
-        while (this.enemies.includes(this.playerPosition)) {
-            this.playerPosition = Math.floor(Math.random() * (this.gridSize * this.gridSize));
-        }
-        this.updateCell(this.playerPosition, 'player', '🎮');
-    }
-
-    moveEnemies() {
-        this.enemies.forEach((pos, index) => {
-            this.clearCell(pos);
-            
-            // Simple AI - move towards player
-            const row = Math.floor(pos / this.gridSize);
-            const col = pos % this.gridSize;
-            const playerRow = Math.floor(this.playerPosition / this.gridSize);
-            const playerCol = this.playerPosition % this.gridSize;
-
-            let newRow = row;
-            let newCol = col;
-
-            if (playerRow < row) newRow--;
-            else if (playerRow > row) newRow++;
-
-            if (playerCol < col) newCol--;
-            else if (playerCol > col) newCol++;
-
-            let newPos = newRow * this.gridSize + newCol;
-
-            // Clamp to grid
-            newPos = Math.max(0, Math.min(this.gridSize * this.gridSize - 1, newPos));
-
-            this.enemies[index] = newPos;
-            this.updateCell(newPos, 'enemy', '👾');
-
-            // Check if enemy caught player
-            if (newPos === this.playerPosition) {
-                this.handleEnemyCollision();
-            }
-        });
-    }
-
-    levelUp() {
-        this.level++;
-        this.levelDisplay.textContent = this.level;
-        this.difficulty += 0.5;
-        this.gameSpeed = Math.max(400, 1000 - (this.level * 100));
-        
-        this.score += 200 * this.level;
-        this.scoreDisplay.textContent = this.score;
-        
-        this.gameStatusDisplay.textContent = `Level ${this.level}! Game continues...`;
-        
-        this.createGrid();
-        this.startGameLoop();
-    }
-
-    gameOver() {
-        this.gameRunning = false;
-        this.gamePaused = false;
-        this.gameStatusDisplay.className = 'game-status game-over';
-        this.gameStatusDisplay.textContent = `GAME OVER! Final Score: ${this.score}`;
-        this.startBtn.disabled = false;
-        this.pauseBtn.disabled = true;
-        clearInterval(this.gameLoopInterval);
-    }
-
-    startGame() {
-        this.score = 0;
-        this.level = 1;
-        this.lives = 3;
-        this.difficulty = 1;
-        this.gameSpeed = 1000;
-        
-        this.scoreDisplay.textContent = this.score;
-        this.levelDisplay.textContent = this.level;
-        this.livesDisplay.textContent = this.lives;
-        
-        this.gameRunning = true;
-        this.gamePaused = false;
-        this.gameStatusDisplay.className = 'game-status running';
-        this.gameStatusDisplay.textContent = 'Game Running...';
-        
-        this.startBtn.disabled = true;
-        this.pauseBtn.disabled = false;
-        
-        this.createGrid();
-        this.startGameLoop();
-    }
-
-    pauseGame() {
-        if (!this.gameRunning) return;
-
-        this.gamePaused = !this.gamePaused;
-
-        if (this.gamePaused) {
-            this.gameStatusDisplay.className = 'game-status paused';
-            this.gameStatusDisplay.textContent = 'Game Paused';
-            clearInterval(this.gameLoopInterval);
-            this.pauseBtn.textContent = 'RESUME';
-        } else {
-            this.gameStatusDisplay.className = 'game-status running';
-            this.gameStatusDisplay.textContent = 'Game Running...';
-            this.pauseBtn.textContent = 'PAUSE';
-            this.startGameLoop();
-        }
-    }
-
-    resetGame() {
-        this.gameRunning = false;
-        this.gamePaused = false;
-        clearInterval(this.gameLoopInterval);
-        
-        this.score = 0;
-        this.level = 1;
-        this.lives = 3;
-        
-        this.scoreDisplay.textContent = this.score;
-        this.levelDisplay.textContent = this.level;
-        this.livesDisplay.textContent = this.lives;
-        
-        this.gameStatusDisplay.className = 'game-status';
-        this.gameStatusDisplay.textContent = 'Press START or use Arrow Keys to play';
-        
-        this.startBtn.disabled = false;
-        this.pauseBtn.disabled = true;
-        this.pauseBtn.textContent = 'PAUSE';
-        
-        this.createGrid();
-    }
-
-    startGameLoop() {
-        clearInterval(this.gameLoopInterval);
-        this.gameLoopInterval = setInterval(() => {
-            if (this.gameRunning && !this.gamePaused) {
-                this.moveEnemies();
-            }
-        }, this.gameSpeed);
-    }
-
-    attachEventListeners() {
-        this.startBtn.addEventListener('click', () => this.startGame());
-        this.pauseBtn.addEventListener('click', () => this.pauseGame());
-        this.resetBtn.addEventListener('click', () => this.resetGame());
-
-        // Keyboard controls
-        document.addEventListener('keydown', (e) => {
-            if (!this.gameRunning || this.gamePaused) return;
-
-            const row = Math.floor(this.playerPosition / this.gridSize);
-            const col = this.playerPosition % this.gridSize;
-            let newPos = this.playerPosition;
-
-            switch (e.key) {
-                case 'ArrowUp':
-                    if (row > 0) newPos = (row - 1) * this.gridSize + col;
-                    break;
-                case 'ArrowDown':
-                    if (row < this.gridSize - 1) newPos = (row + 1) * this.gridSize + col;
-                    break;
-                case 'ArrowLeft':
-                    if (col > 0) newPos = row * this.gridSize + (col - 1);
-                    break;
-                case 'ArrowRight':
-                    if (col < this.gridSize - 1) newPos = row * this.gridSize + (col + 1);
-                    break;
-                default:
-                    return;
-            }
-
-            if (newPos !== this.playerPosition) {
-                this.movePlayer(newPos);
-            }
-        });
-    }
-}
-
-// Initialize game when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    new OperationZeroGame();
-});
+// Paste the entire <script> content (except the opening and closing <script> tags) here.
