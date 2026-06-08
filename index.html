@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operation Zero - Web Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Operation Zero</h1>
+            <div class="stats">
+                <div class="stat">
+                    <span class="label">Score:</span>
+                    <span class="value" id="score">0</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Level:</span>
+                    <span class="value" id="level">1</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Lives:</span>
+                    <span class="value" id="lives">3</span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div id="gameBoard" class="game-board"></div>
+        </main>
+
+        <footer>
+            <div id="gameStatus" class="game-status">Press START or use Arrow Keys to play</div>
+            <button id="startBtn" class="btn btn-primary">START GAME</button>
+            <button id="pauseBtn" class="btn btn-secondary" disabled>PAUSE</button>
+            <button id="resetBtn" class="btn btn-secondary">RESET</button>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
