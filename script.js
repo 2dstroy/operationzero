@@ -1,7 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('3d');
 const miniCanvas = document.getElementById('minimap');
-const mctx = miniCanvas.getContext('2d');
+const mctx = miniCanvas.getContext('3d');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
