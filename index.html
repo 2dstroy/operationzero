@@ -308,8 +308,9 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
 
     <div id="menu-tabs">
       <div class="menu-tab active" data-tab="solo">SOLO</div>
+      <div class="menu-tab" data-tab="pvp">PVP</div>
       <div class="menu-tab" data-tab="character">CHARACTER</div>
-      <div class="menu-tab" data-tab="multiplayer">MULTIPLAYER</div>
+      <div class="menu-tab" data-tab="multiplayer">ONLINE</div>
     </div>
 
     <!-- SOLO TAB -->
@@ -323,6 +324,20 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
         You play as CT. Defuse the bomb or eliminate all Terrorists.
       </div>
       <button id="mm-start">DEPLOY SOLO</button>
+    </div>
+
+    <!-- PVP TAB -->
+    <div class="menu-panel" id="tab-pvp">
+      <div id="mm-controls" style="text-align:left;line-height:2.2;">
+        <span style="color:#e05c4a;font-size:13px;letter-spacing:3px;font-family:'Barlow Condensed',sans-serif;">⚔ PLAYER 1 (CT)</span><br>
+        WASD — Move &nbsp;|&nbsp; Mouse — Aim &nbsp;|&nbsp; Click — Shoot<br>
+        R — Reload &nbsp;|&nbsp; B — Buy Menu<br><br>
+        <span style="color:#5ba3f0;font-size:13px;letter-spacing:3px;font-family:'Barlow Condensed',sans-serif;">⚔ PLAYER 2 (T)</span><br>
+        IJKL — Move &nbsp;|&nbsp; Numpad 0 / U — Shoot<br>
+        O — Reload &nbsp;|&nbsp; N — Buy Menu<br><br>
+        <span style="color:#c8a96e;">First to 16 rounds wins. No bots.</span>
+      </div>
+      <button id="mm-pvp-start" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:6px;text-transform:uppercase;background:rgba(224,92,74,0.1);border:1px solid rgba(224,92,74,0.5);color:#e05c4a;padding:12px 40px;cursor:pointer;width:100%;">DEPLOY PVP</button>
     </div>
 
     <!-- CHARACTER TAB -->
@@ -830,6 +845,7 @@ const WEAPONS = {
   helmet: {name:'HELMET', cost:350,type:'Equipment'},
   armor:  {name:'ARMOR',  cost:650,type:'Equipment'},
   he:     {name:'HE GREN',cost:300,type:'Grenade'},
+  magazine:{name:'MAGAZINE',cost:150,type:'Ammo'},
 };
 
 const RAW_MAP = [
@@ -1070,7 +1086,10 @@ function switchWeapon(idx){
 
 function toggleBuyMenu(){
   if(gameState!=='buyphase'&&gameState!=='playing') return;
-  if(gameState==='playing'&&round.timer<ROUND_TIME-BUY_TIME) return;
+  // Always allow opening if out of ammo (magazine emergency buy)
+  const cw=player.weapons[player.activeWeapon];
+  const outOfAmmo = cw && cw.reserve===0 && cw.ammo===0;
+  if(gameState==='playing'&&round.timer<ROUND_TIME-BUY_TIME&&!outOfAmmo) return;
   isBuyOpen=!isBuyOpen;
   const menu=document.getElementById('buy-menu');
   if(isBuyOpen){menu.style.display='flex';buildBuyMenu();}
@@ -1081,15 +1100,25 @@ function buildBuyMenu(){
   const items=document.getElementById('buy-items');
   items.innerHTML='';
   document.getElementById('buy-money').textContent=`FUNDS: $${player.money}`;
+  // Compute magazine label/cost dynamically based on current weapon
+  const curW = player.weapons[player.activeWeapon];
+  const magCost = curW ? Math.max(50, Math.floor(curW.cost * 0.05) || 150) : 150;
+  const magLabel = curW ? `MAG (${curW.name})` : 'MAGAZINE';
+  const magItem = {name:magLabel, cost:magCost, type:'Ammo'};
   const shopItems=[
     {key:'m4a1',w:WEAPONS.m4a1},{key:'awp',w:WEAPONS.awp},{key:'deagle',w:WEAPONS.deagle},
     {key:'mp5',w:WEAPONS.mp5},{key:'armor',w:WEAPONS.armor},{key:'helmet',w:WEAPONS.helmet},
-    {key:'he',w:WEAPONS.he},{key:'usp',w:WEAPONS.usp}
+    {key:'he',w:WEAPONS.he},{key:'usp',w:WEAPONS.usp},
+    {key:'magazine',w:magItem}
   ];
+  const cw2 = player.weapons[player.activeWeapon];
+  const needsMag = cw2 && cw2.reserve===0;
   shopItems.forEach(({key,w})=>{
     const div=document.createElement('div');
-    div.className='buy-item'+(player.money<w.cost?' cant-afford':'');
-    div.innerHTML=`<div class="bi-type">${w.type}</div><div class="bi-name">${w.name}</div><div class="bi-cost">$${w.cost}</div>`;
+    const urgent = key==='magazine' && needsMag;
+    div.className='buy-item'+(player.money<w.cost?' cant-afford':'')+(urgent?' mag-urgent':'');
+    if(urgent) div.style.cssText='border-color:rgba(255,50,50,0.7);background:rgba(224,50,50,0.12);animation:pulse 0.7s ease-in-out infinite;';
+    div.innerHTML=`<div class="bi-type">${w.type}${urgent?' ⚠ EMPTY':''}</div><div class="bi-name">${w.name}</div><div class="bi-cost">$${w.cost}</div>`;
     if(player.money>=w.cost) div.addEventListener('click',()=>buyItem(key,w));
     items.appendChild(div);
   });
@@ -1101,6 +1130,11 @@ function buyItem(key,w){
   if(key==='armor'){player.armor=100;}
   else if(key==='helmet'){player.hasHelmet=true;}
   else if(key==='he'){/* future */}
+  else if(key==='magazine'){
+    // Refill reserve for current active weapon
+    const cw=player.weapons[player.activeWeapon];
+    if(cw){ cw.reserve=Math.min(cw.reserve+cw.mag, cw.mag*3); }
+  }
   else{
     const existing=player.weapons.find(pw=>pw.key===key);
     if(existing){existing.reserve=Math.min(existing.reserve+existing.mag,existing.mag*3);}
