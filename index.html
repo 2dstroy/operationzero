@@ -154,7 +154,7 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
 .char-name-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(200,169,110,0.2);color:#e8dfc8;font-family:'Share Tech Mono',monospace;font-size:12px;padding:6px 10px;outline:none;letter-spacing:2px;text-transform:uppercase;}
 .char-name-input:focus{border-color:rgba(200,169,110,0.5);}
 .shape-opts{display:flex;gap:8px;}
-.shape-opt{width:36px;height:36px;background:rgba(255,255,255,0.04);border:1px solid rgba(200,169,110,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;}
+.shape-opt{width:36px;height:36px;background:rgba(255,255,255,0.04);border:1px solid rgba(200,169,110,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15px;}
 .shape-opt.selected{border-color:#c8a96e;background:rgba(200,169,110,0.08);}
 .shape-opt svg{width:20px;height:20px;}
 
@@ -187,7 +187,6 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
 <canvas id="gameCanvas"></canvas>
 <div id="ui">
 
-<!-- ═══ MAIN MENU ═══ -->
 <div id="main-menu">
   <div class="menu-bg-grid"></div>
   <div id="mm-logo">Operation<span>Zero Hour</span></div>
@@ -199,7 +198,6 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
     <div class="menu-tab" data-tab="character">CHARACTER</div>
   </div>
 
-  <!-- SOLO -->
   <div class="menu-panel active" id="tab-solo">
     <div id="mm-controls">
       WASD — Move &nbsp;|&nbsp; Mouse — Aim &nbsp;|&nbsp; Click — Shoot<br>
@@ -211,10 +209,7 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
     <button id="mm-start">DEPLOY SOLO</button>
   </div>
 
-  <!-- ONLINE PVP -->
   <div class="menu-panel" id="tab-pvp">
-
-    <!-- Step 1: Sign in -->
     <div class="pvp-section" id="pvp-auth-section">
       <div class="pvp-label">YOUR EMAIL</div>
       <input class="pvp-input" id="pvp-email" type="email" placeholder="you@example.com">
@@ -224,7 +219,6 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
       <div id="pvp-status">ENTER EMAIL TO PLAY ONLINE</div>
     </div>
 
-    <!-- Step 2: Lobby + team select -->
     <div id="pvp-lobby">
       <div class="pvp-section">
         <div class="lobby-header">
@@ -257,10 +251,8 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
         <button class="pvp-btn red" id="lobby-leave-btn" style="margin-top:2px;">LEAVE ROOM</button>
       </div>
     </div>
-
   </div>
 
-  <!-- CHARACTER -->
   <div class="menu-panel" id="tab-character">
     <div id="char-panel">
       <div class="char-preview"><canvas id="char-canvas-preview" width="100" height="100"></canvas></div>
@@ -283,9 +275,8 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
     </div>
   </div>
 
-</div><!-- /main-menu -->
+</div>
 
-<!-- HUD -->
 <div id="hud" style="display:none;">
   <div id="hud-left">
     <div id="money">$800</div>
@@ -301,7 +292,6 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
   </div>
 </div>
 
-<!-- Opponent mini HUD -->
 <div id="opponent-hud">
   <div id="opp-label">OPPONENT</div>
   <div id="opp-name" style="color:#e05c4a;">—</div>
@@ -352,7 +342,6 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
 </div>
 <div id="ping-display">PING: — ms</div>
 
-<!-- Mobile -->
 <div id="mobile-controls">
   <div id="joystick-zone"><div id="joystick-base"></div><div id="joystick-stick"></div></div>
   <div id="weapon-switcher" style="display:none;">
@@ -371,12 +360,9 @@ body{background:#0a0f14;color:#e8dfc8;font-family:'Barlow',sans-serif;overflow:h
 </div>
 <div id="aim-ring"><div id="aim-dot"></div></div>
 
-</div><!-- /ui -->
+</div>
 
 <script>
-// ════════════════════════════════════════════════════════
-//  FIREBASE CONFIG — replace with your own project values
-// ════════════════════════════════════════════════════════
 const firebaseConfig = {
   apiKey: "AIzaSyBHMAZ9fJbqYx-14MAY5WwSFPfV5q6jXzs",
   authDomain: "fire-7eb23.firebaseapp.com",
@@ -398,15 +384,12 @@ window._fs = {};
     window._db = fsModule.getFirestore(app);
     window._fsOk = true;
     window._fs = fsModule;
-    console.log('Firebase ✓');
+    console.log('Firebase OK');
   } catch(e) {
-    console.warn('Firebase not configured:', e.message);
+    console.warn('Firebase error:', e.message);
   }
 })();
 
-// ════════════════════════════════════════════════════════
-//  CHARACTER CONFIG
-// ════════════════════════════════════════════════════════
 const BODY_COLORS   = ['#5BA3F0','#00C896','#E05C4A','#C8A96E','#A855F7','#F97316','#EC4899','#FFFFFF'];
 const ACCENT_COLORS = ['#2E86C1','#00956e','#C0392B','#8B6914','#7C3AED','#C2410C','#BE185D','#888888'];
 const SHAPES = ['circle','square','diamond'];
@@ -472,7 +455,7 @@ buildShapes(); drawPreview();
 // ════════════════════════════════════════════════════════
 let myEmail='', myUid='', myRoomId='', myTeam=null;
 let isRoomHost=false, lobbyUnsub=null;
-let pvpOnline=false; // true when playing online vs human
+let pvpOnline=false;
 
 function pvpStatus(msg,color='#8a9199'){
   const el=document.getElementById('pvp-status'); el.textContent=msg; el.style.color=color;
@@ -481,7 +464,7 @@ function randRoom(){ const w=['ALPHA','BRAVO','DELTA','ECHO','FOXTROT','GHOST','
 function emailKey(e){ return e.replace(/\./g,'_').replace(/@/g,'__at__'); }
 
 async function joinOrCreateRoom(){
-  if(!window._fsOk){ pvpStatus('⚠ FIREBASE NOT CONFIGURED — edit firebaseConfig in the HTML','#e05c4a'); return; }
+  if(!window._fsOk){ pvpStatus('⚠ FIREBASE NOT CONFIGURED','#e05c4a'); return; }
   const email=document.getElementById('pvp-email').value.trim().toLowerCase();
   if(!email||!email.includes('@')){ pvpStatus('ENTER A VALID EMAIL','#e05c4a'); return; }
   myEmail=email; myUid=emailKey(email);
@@ -541,9 +524,7 @@ function renderLobby(data){
   const tSlots=document.getElementById('lobby-t-slots');
   ctSlots.innerHTML=''; tSlots.innerHTML='';
 
-  let ctCount=0, tCount=0;
-  let bothReady=true;
-  let opponentData=null;
+  let ctCount=0, tCount=0, bothReady=true;
 
   Object.entries(players).forEach(([uid,info])=>{
     const isMe=(uid===myUid);
@@ -555,21 +536,14 @@ function renderLobby(data){
     if(!info.team) bothReady=false;
     if(info.team==='ct'){ ctSlots.appendChild(div); ctCount++; }
     else if(info.team==='t'){ tSlots.appendChild(div); tCount++; }
-    if(!isMe) opponentData=info;
   });
 
-  // Empty slot hints
   if(ctCount===0){ const e=document.createElement('div'); e.className='lobby-empty'; e.textContent='EMPTY'; ctSlots.appendChild(e); }
   if(tCount===0){ const e=document.createElement('div'); e.className='lobby-empty'; e.textContent='EMPTY'; tSlots.appendChild(e); }
 
-  // Store opponent info for in-game HUD
-  window._oppData=opponentData;
-
-  // My team selection highlight
   document.getElementById('pick-ct-btn').classList.toggle('chosen',myTeam==='ct');
   document.getElementById('pick-t-btn').classList.toggle('chosen',myTeam==='t');
 
-  // Waiting message / start button
   const numPlayers=Object.keys(players).length;
   const waitMsg=document.getElementById('lobby-waiting-msg');
   const startBtn=document.getElementById('lobby-start-btn');
@@ -584,7 +558,7 @@ function renderLobby(data){
     waitMsg.textContent='⚠ BOTH ON SAME TEAM — ONE MUST SWITCH';
     startBtn.style.display='none';
   } else {
-    waitMsg.textContent='READY! '+( isRoomHost ? 'YOU ARE HOST' : 'WAITING FOR HOST TO START' );
+    waitMsg.textContent='READY! '+(isRoomHost?'YOU ARE HOST':'WAITING FOR HOST TO START');
     startBtn.style.display=isRoomHost?'block':'none';
   }
 }
@@ -620,12 +594,10 @@ async function leaveRoom(){
 function startOnlineGame(data){
   if(lobbyUnsub){ lobbyUnsub(); lobbyUnsub=null; }
   const players=data.players||{};
-  // Set my team from Firestore (authoritative)
   if(players[myUid]) myTeam=players[myUid].team;
   pvpOnline=true;
   player.isT=(myTeam==='t');
 
-  // Find opponent
   const oppUid=Object.keys(players).find(u=>u!==myUid);
   window._oppUid=oppUid;
   window._oppData=oppUid?players[oppUid]:null;
@@ -644,7 +616,6 @@ function startOnlineGame(data){
   loop();
 }
 
-// Subscribe to opponent's real-time state
 let oppUnsub=null;
 function subscribeOpponent(){
   if(!window._fsOk||!myRoomId||!window._oppUid) return;
@@ -654,23 +625,42 @@ function subscribeOpponent(){
     if(!snap.exists()) return;
     const d=snap.data();
     const opp=d.players&&d.players[window._oppUid];
-    if(!opp) return;
-    // Sync opponent into opponent object
-    opponent.x=opp.x||opponent.x;
-    opponent.y=opp.y||opponent.y;
-    opponent.angle=opp.angle||0;
-    opponent.hp=opp.hp!=null?opp.hp:opponent.hp;
-    opponent.alive=opp.alive!=null?opp.alive:opponent.alive;
-    opponent.armor=opp.armor||0;
-    const wKey=opp.weapon||'glock';
-    if(wKey&&WEAPONS[wKey]){ opponent.weapon={...WEAPONS[wKey],ammo:opp.ammo||0,reserve:opp.reserve||0,key:wKey}; }
-    opponent.name=opp.name||'OPPONENT';
-    opponent.bodyColor=opp.body||'#E05C4A';
-    opponent.accentColor=opp.accent||'#8B1A1A';
-    opponent.shape=opp.shape||'circle';
-    opponent.isT=opp.team==='t';
-    // Sync round state from host
-    if(d.status==='playing'&&isRoomHost===false){
+    if(opp){
+      opponent.x=opp.x||opponent.x;
+      opponent.y=opp.y||opponent.y;
+      opponent.angle=opp.angle||0;
+      opponent.hp=opp.hp!=null?opp.hp:opponent.hp;
+      opponent.alive=opp.alive!=null?opp.alive:opponent.alive;
+      opponent.armor=opp.armor||0;
+      const wKey=opp.weapon||'glock';
+      if(wKey&&WEAPONS[wKey]){ opponent.weapon={...WEAPONS[wKey],ammo:opp.ammo||0,reserve:opp.reserve||0,key:wKey}; }
+      opponent.name=opp.name||'OPPONENT';
+      opponent.bodyColor=opp.body||'#E05C4A';
+      opponent.accentColor=opp.accent||'#8B1A1A';
+      opponent.shape=opp.shape||'circle';
+      opponent.isT=opp.team==='t';
+    }
+
+    // ── FIX: Read MY OWN hp from Firestore (so I feel hits from opponent) ──
+    const myData=d.players&&d.players[myUid];
+    if(myData && myData.hp != null && player.alive){
+      const incomingHp = myData.hp;
+      if(incomingHp < player.hp){
+        // I was hit by the opponent
+        player.hp = incomingHp;
+        player.alive = incomingHp > 0;
+        updateHUD();
+        if(!player.alive){
+          document.getElementById('dead-msg').style.display='block';
+          updatePips();
+          if(gameState==='playing'&&!bomb.planted){
+            endRound(!player.isT,'YOU WERE ELIMINATED');
+          }
+        }
+      }
+    }
+
+    if(!isRoomHost){
       if(d.roundTimer!=null) round.timer=d.roundTimer;
       if(d.ctScore!=null) round.ctScore=d.ctScore;
       if(d.tScore!=null) round.tScore=d.tScore;
@@ -685,7 +675,7 @@ function subscribeOpponent(){
         endRound(d.roundEnd.ctWins,d.roundEnd.reason,true);
       }
     }
-    // Update opponent HUD
+
     document.getElementById('opp-hp-num').textContent=opponent.alive?Math.max(0,Math.round(opponent.hp)):0;
     document.getElementById('opp-hp-fill').style.width=(opponent.alive?Math.max(0,opponent.hp):0)+'%';
     document.getElementById('opp-weapon').textContent=opponent.weapon?opponent.weapon.name:'—';
@@ -693,7 +683,6 @@ function subscribeOpponent(){
   });
 }
 
-// Push my state to Firestore (~10x/sec via throttle)
 let lastPush=0;
 async function pushMyState(){
   if(!window._fsOk||!myRoomId||!myUid) return;
@@ -725,6 +714,18 @@ async function pushMyState(){
   try{ await updateDoc(doc(window._db,'ozh_pvp_rooms',myRoomId),patch); }catch(e){}
 }
 
+// ── FIX: Push damage dealt to opponent into THEIR Firestore record ──
+async function pushDamageToOpponent(newHp, alive){
+  if(!window._fsOk||!myRoomId||!window._oppUid) return;
+  const { doc, updateDoc } = window._fs;
+  try{
+    await updateDoc(doc(window._db,'ozh_pvp_rooms',myRoomId),{
+      [`players.${window._oppUid}.hp`]: Math.max(0, Math.round(newHp)),
+      [`players.${window._oppUid}.alive`]: alive,
+    });
+  }catch(e){}
+}
+
 async function pushRoundEnd(ctWins,reason){
   if(!window._fsOk||!isRoomHost) return;
   const { doc, updateDoc } = window._fs;
@@ -736,7 +737,6 @@ async function clearRoundEnd(){
   try{ await updateDoc(doc(window._db,'ozh_pvp_rooms',myRoomId),{ roundEnd: deleteField() }); }catch(e){}
 }
 
-// Measure ping
 let pingTs=0;
 setInterval(async ()=>{
   if(!window._fsOk||!myRoomId) return;
@@ -745,7 +745,6 @@ setInterval(async ()=>{
   try{ await updateDoc(doc(window._db,'ozh_pvp_rooms',myRoomId),{ [`ping_${myUid}`]: pingTs }); }catch(e){}
 },2000);
 
-// Wire lobby UI buttons
 document.getElementById('pvp-join-btn').onclick=joinOrCreateRoom;
 document.getElementById('pick-ct-btn').onclick=()=>pickTeam('ct');
 document.getElementById('pick-t-btn').onclick=()=>pickTeam('t');
@@ -757,9 +756,6 @@ document.getElementById('copy-room-btn').onclick=()=>{
   setTimeout(()=>document.getElementById('copy-room-btn').textContent='COPY CODE',2000);
 };
 
-// ════════════════════════════════════════════════════════
-//  TAB SWITCHING
-// ════════════════════════════════════════════════════════
 document.querySelectorAll('.menu-tab').forEach(tab=>{
   tab.onclick=()=>{
     document.querySelectorAll('.menu-tab').forEach(t=>t.classList.remove('active'));
@@ -835,7 +831,6 @@ MAP_DATA.forEach((row,r)=>row.forEach((cell,c)=>{
 }));
 let bombsite=bombsites[Math.floor(bombsites.length/2)];
 
-// Me
 const player={
   x:0,y:0,angle:0,hp:100,armor:0,
   money:800,weapons:[{...WEAPONS.usp,ammo:12,reserve:36,key:'usp'}],
@@ -846,7 +841,6 @@ const player={
   get shape(){ return window._charCfg?.shape||'circle'; },
 };
 
-// Online opponent (read-only from Firestore)
 const opponent={
   x:400,y:400,angle:0,hp:100,armor:0,alive:true,isT:true,hasBomb:false,
   name:'OPPONENT',bodyColor:'#E05C4A',accentColor:'#8B1A1A',shape:'circle',
@@ -903,7 +897,6 @@ function initRound(){
   player.reloading=false;
   player.activeWeapon=Math.min(player.activeWeapon,player.weapons.length-1);
 
-  // AI enemies only in solo mode
   enemies=[];
   if(!pvpOnline){
     const numE=Math.min(3+Math.floor(round.num/3),5);
@@ -912,7 +905,6 @@ function initRound(){
       enemies.push(spawnEnemy({x:sp2.x+(Math.random()-.5)*20,y:sp2.y+(Math.random()-.5)*20},i));
     }
   } else {
-    // Place opponent on their team spawn
     const oppTeamSpawn=opponent.isT ? tSpawns[0] : ctSpawns[0];
     opponent.x=oppTeamSpawn.x+40; opponent.y=oppTeamSpawn.y; opponent.alive=true; opponent.hp=100;
   }
@@ -929,7 +921,6 @@ function initRound(){
   if(pvpOnline) clearRoundEnd();
 }
 
-// ── Input ──
 document.addEventListener('keydown',e=>{
   keys[e.key.toLowerCase()]=true;
   if(gameState==='menu') return;
@@ -1028,8 +1019,8 @@ function buyItem(key,w){
 
 function updateHUD(){
   document.getElementById('money').textContent=`$${player.money}`;
-  document.getElementById('health-num').textContent=player.alive?player.hp:0;
-  document.getElementById('hp-fill').style.width=(player.alive?player.hp:0)+'%';
+  document.getElementById('health-num').textContent=player.alive?Math.max(0,player.hp):0;
+  document.getElementById('hp-fill').style.width=(player.alive?Math.max(0,player.hp):0)+'%';
   document.getElementById('armor-num').textContent=`♦ ${player.armor}`;
   const w=player.weapons[player.activeWeapon];
   if(w){document.getElementById('weapon-info').textContent=w.name;document.getElementById('ammo-info').textContent=`${w.ammo}/${w.reserve}`;}
@@ -1156,7 +1147,6 @@ function update(dt){
   }
   if(gameState!=='playing'&&gameState!=='buyphase') return;
 
-  // Move player
   if(player.alive&&!isBuyOpen){
     const spd=2.2;let dx=0,dy=0;
     if(keys['w']||keys['arrowup']) dy-=spd;
@@ -1177,13 +1167,11 @@ function update(dt){
     if(round.timer<=0){endRound(false,'TIME EXPIRED');return;}
   }
 
-  // Online: push state & ping display
   if(pvpOnline){
     pushMyState();
     if(pingTs>0) document.getElementById('ping-display').textContent=`PING: ${Date.now()-pingTs} ms`;
   }
 
-  // Bomb (planted)
   if(bomb.planted){
     bomb.timer-=dt/60;
     document.getElementById('bomb-bar').style.width=(bomb.timer/BOMB_TIME*100)+'%';
@@ -1201,7 +1189,6 @@ function update(dt){
     }
   }
 
-  // Plant
   if(!bomb.planted&&player.alive&&player.isT&&player.hasBomb){
     const dd=Math.hypot(player.x-bombsite.x,player.y-bombsite.y);
     if(dd<40){
@@ -1218,28 +1205,38 @@ function update(dt){
     } else { document.getElementById('plant-prompt').style.display='none'; }
   } else if(!bomb.planted) document.getElementById('plant-prompt').style.display='none';
 
-  // Bullets
+  // Bullet logic
   for(let i=bullets.length-1;i>=0;i--){
     const b=bullets[i]; b.x+=b.vx;b.y+=b.vy;b.life--;
     if(b.life<=0||isWall(b.x,b.y)){if(isWall(b.x,b.y))effects.push({type:'impact',x:b.x,y:b.y,life:8,maxLife:8});bullets.splice(i,1);continue;}
     let hit=false;
+
     if(b.owner==='player'){
-      // In online PVP: check if bullet hits opponent (server-authoritative would be ideal; here client-side for responsiveness)
+      // ── PVP: hit opponent ──
       if(pvpOnline&&opponent.alive&&opponent.isT!==player.isT){
         if(Math.hypot(b.x-opponent.x,b.y-opponent.y)<PLAYER_R+3){
-          opponent.hp-=b.dmg; if(opponent.hp<0)opponent.hp=0;
+          let dmg=b.dmg;
+          if(opponent.armor>0){const a=Math.min(dmg*.5,opponent.armor);opponent.armor-=a;dmg-=a;}
+          opponent.hp-=dmg;
+          if(opponent.hp<0) opponent.hp=0;
           effects.push({type:'blood',x:opponent.x,y:opponent.y,life:15,maxLife:15});
           bullets.splice(i,1);
+
+          // ── FIX: Write damage to Firestore so opponent client sees they were hit ──
+          pushDamageToOpponent(opponent.hp, opponent.hp > 0);
+
           if(opponent.hp<=0&&opponent.alive){
             opponent.alive=false;
             const w=player.weapons[player.activeWeapon];
             addKillfeed(player.name,w?w.name:'GUN',opponent.name,player.isT?'t':'ct');
-            player.money=Math.min(16000,player.money+300);updateHUD();updatePips();
+            player.money=Math.min(16000,player.money+300);
+            updateHUD(); updatePips();
             if(!bomb.planted) endRound(!player.isT,'OPPONENT ELIMINATED');
           }
           hit=true;
         }
       }
+
       // Solo: hit enemies
       if(!hit&&!pvpOnline){
         for(let j=enemies.length-1;j>=0;j--){
@@ -1253,6 +1250,7 @@ function update(dt){
         }
       }
     }
+
     if(!hit&&b.owner==='enemy'&&player.alive){
       if(Math.hypot(b.x-player.x,b.y-player.y)<PLAYER_R+3){
         let dmg=b.dmg; if(player.armor>0){const a=Math.min(dmg*.5,player.armor);player.armor-=a;dmg-=a;}
@@ -1267,7 +1265,6 @@ function update(dt){
   for(let i=effects.length-1;i>=0;i--){effects[i].life--;if(effects[i].life<=0)effects.splice(i,1);}
   if(!pvpOnline) enemies.forEach(e=>updateEnemy(e,dt));
 
-  // Win conditions
   if(gameState==='playing'){
     if(pvpOnline){
       if(!opponent.alive&&!bomb.planted) endRound(opponent.isT,'OPPONENT ELIMINATED');
@@ -1313,7 +1310,6 @@ function draw(){
     ctx.save();ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(e.x-16,e.y-28,32,4);ctx.fillStyle=e.hp>50?'#4caf50':'#e05c4a';ctx.fillRect(e.x-16,e.y-28,32*(e.hp/100),4);ctx.restore();
   });
 
-  // Opponent (online)
   if(pvpOnline&&opponent.alive){
     drawCharShape(ctx,opponent.x,opponent.y,PLAYER_R,opponent.bodyColor,opponent.accentColor,opponent.shape,opponent.angle,false,opponent.name);
     ctx.save();ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(opponent.x-16,opponent.y-28,32,4);ctx.fillStyle=opponent.hp>50?'#4caf50':'#e05c4a';ctx.fillRect(opponent.x-16,opponent.y-28,32*(opponent.hp/100),4);ctx.restore();
